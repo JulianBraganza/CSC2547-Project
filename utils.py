@@ -99,14 +99,12 @@ class RandomSplitGenerator:
         batch_size, num_channels, width, height = batch.shape
         mask = torch.zeros_like(batch)
         y1, y2 = 0, width
-        
         for i in range(batch_size):
             n = np.random.randint(0,2)
             if n == 0:
                 x1, x2 = 0, height//2
             else:
-                x1, x2 = height//2, height
-                
+                x1, x2 = height//2, height    
             mask[i, :, x1: x2 , y1: y2 ] = 1
         return mask
     
