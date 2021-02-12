@@ -51,13 +51,14 @@ class HVAEAC(nn.Module):
         observed = self.make_observed(image,mask)
         proposal_mu, proposal_logvar = self.generate_proposal_params(image,mask)
         prior_mu, prior_logvar = self.generate_prior_params(observed,mask)
+        
         z = self.reparam(proposal_mu, proposal_logvar)
         recon_image = self.gen_net(z[:,-1,:])
-
+        
         RE = (F.mse_loss(recon_image, image,reduction='none')*mask).view(image.shape[0], -1).sum(-1)
-
         KLD = diag_gaussian_KLD((proposal_mu[:,0,:],proposal_logvar[:,0,:]),
                                 (prior_mu[:,0,:],prior_logvar[:,0,:]),dim=1)
+        
         for i in range(len(self.latent_nets)):
             params_q = (proposal_mu[:,(i+1),:],proposal_logvar[:,(i+1),:])
             params_zi = self.latent_nets[i](torch.cat([z[:,i,:],
@@ -69,7 +70,6 @@ class HVAEAC(nn.Module):
         
         elbo = RE + beta*KLD
 
-        
         return elbo.mean(), RE.mean(), KLD.mean()
     
     def generate_samples(self,image,mask,N):
